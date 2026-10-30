@@ -1,0 +1,10 @@
+erDiagram
+    CUSTOMERS ||--o{ ORDERS : places
+    ORDERS ||--|{ ORDER_ITEMS : contains
+    PRODUCTS ||--o{ ORDER_ITEMS : purchased
+    SELLERS ||--o{ ORDER_ITEMS : fulfils
+    ORDERS ||--o{ PAYMENTS : has
+    ORDERS ||--o| SHIPMENTS : receives
+    PRODUCTS ||--o{ INVENTORY_MOVEMENTS : tracks
+    SELLERS ||--o{ INVENTORY_MOVEMENTS : owns
+    ORDERS ||--o{ ORDER_EVENTS : generates
