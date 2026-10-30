@@ -270,23 +270,57 @@ def corrupt_data(clean: dict[str, pd.DataFrame], out: Path) -> None:
     idx = choose_indices(raw["orders"], .001)
     raw["orders"].loc[idx, "order_date"] = pd.Timestamp("2035-01-01")
 
+        # Order item data-quality issues
     idx = choose_indices(raw["order_items"], .004)
-    raw["order_items"].loc[idx, "quantity"] = -abs(raw["order_items"].loc[idx, "quantity"])
+    raw["order_items"].loc[idx, "quantity"] = (
+        -abs(raw["order_items"].loc[idx, "quantity"])
+    )
+
     idx = choose_indices(raw["order_items"], .003)
     raw["order_items"].loc[idx, "product_id"] = "PRD999999"
-    idx = choose_indices(raw["order_items"], .002)
-    raw["order_items"].loc[idx, "unit_price"] = "PRICE_ERROR"
-    # Repeated primary keys.
-    raw["orders"] = pd.concat([raw["orders"], raw["orders"].sample(frac=.001, random_state=SEED)], ignore_index=True)
-    raw["customers"] = pd.concat([raw["customers"], raw["customers"].sample(frac=.001, random_state=SEED)], ignore_index=True)
 
+    idx = choose_indices(raw["order_items"], .002)
+
+    # Convert numeric column to object before inserting an invalid string
+    raw["order_items"]["unit_price"] = (
+        raw["order_items"]["unit_price"].astype(object)
+    )
+
+    raw["order_items"].loc[idx, "unit_price"] = "PRICE_ERROR"
+
+    # Repeated primary keys
+    raw["orders"] = pd.concat(
+        [
+            raw["orders"],
+            raw["orders"].sample(frac=.001, random_state=SEED)
+        ],
+        ignore_index=True
+    )
+
+    raw["customers"] = pd.concat(
+        [
+            raw["customers"],
+            raw["customers"].sample(frac=.001, random_state=SEED)
+        ],
+        ignore_index=True
+    )
+
+    # Payment data-quality issues
     idx = choose_indices(raw["payments"], .003)
-    raw["payments"].loc[idx, "payment_amount"] = -abs(raw["payments"].loc[idx, "payment_amount"])
+    raw["payments"].loc[idx, "payment_amount"] = (
+        -abs(raw["payments"].loc[idx, "payment_amount"])
+    )
+
     idx = choose_indices(raw["payments"], .002)
     raw["payments"].loc[idx, "payment_status"] = "unknown_status"
-    # A small number of amounts become strings to simulate source type drift.
+
+    # Simulate payment amount type drift
     idx = choose_indices(raw["payments"], .001)
-    raw["payments"]["payment_amount"] = raw["payments"]["payment_amount"].astype(object)
+
+    raw["payments"]["payment_amount"] = (
+        raw["payments"]["payment_amount"].astype(object)
+    )
+
     raw["payments"].loc[idx, "payment_amount"] = "AMOUNT_PENDING"
 
     idx = choose_indices(raw["shipments"], .003)
